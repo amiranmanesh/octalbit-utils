@@ -8,7 +8,7 @@ type Item struct {
 }
 
 type Queue interface {
-	Create(exChangeName, queueName, bindingName string) error
+	Create(exChangeName, exchangeKind, queueName, bindingName string) error
 	Publish(exChangeName, routingName string, body []byte) error
-	Consume(queueName string, itemHook func(Item)) error
+	Consume(queueName string, autoAck bool, itemHook func(Item)) error
 }
