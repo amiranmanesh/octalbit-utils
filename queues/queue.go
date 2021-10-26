@@ -1,4 +1,4 @@
-package queue
+package queues
 
 import "time"
 
@@ -9,6 +9,6 @@ type Item struct {
 
 type Queue interface {
 	Create(exChangeName, queueName, bindingName string) error
-	Publish(queueName string, body []byte) error
+	Publish(exChangeName, routingName string, body []byte) error
 	Consume(queueName string, itemHook func(Item)) error
 }

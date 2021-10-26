@@ -1,5 +1,0 @@
-package queue
-
-func NewQueue() {
-
-}
