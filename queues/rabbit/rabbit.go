@@ -23,12 +23,6 @@ func NewQueueWithConfigStruct(conf Configs) (queues.Queue, error) {
 	return dialRabbitQueue(conf.Address, conf.Port, conf.Username, conf.Password)
 }
 
-type rabbit struct {
-	Conn   *amqp.Connection
-	Chan   *amqp.Channel
-	Queues queuesInfo
-}
-
 func (r *rabbit) Create(exChangeName, exchangeKind, queueName, bindingName string) error {
 	if r.Queues.isExist(exChangeName, queueName, bindingName) {
 		return fmt.Errorf("this queue is already exist")
@@ -47,7 +41,7 @@ func (r *rabbit) Publish(exChangeName, routingName string, body []byte) error {
 	if r.Chan == nil {
 		return fmt.Errorf("create must be called first")
 	}
-	//TODO: check is exChangeName and routingName are exist or not
+	//TODO: check exChangeName and routingName are exist or not
 	return r.Chan.Publish(
 		exChangeName,
 		routingName,
@@ -61,7 +55,41 @@ func (r *rabbit) Publish(exChangeName, routingName string, body []byte) error {
 }
 
 func (r *rabbit) Consume(queueName string, autoAck bool, itemHook func(queues.Item)) error {
-	panic("Implement me")
+	if r.Chan == nil {
+		return fmt.Errorf("create must be called first")
+	}
+	//TODO: check queueName is exist or not
+	consumer, err := r.Chan.Consume(
+		queueName,
+		"",
+		autoAck,
+		false,
+		false,
+		false,
+		nil,
+	)
+	if err != nil {
+		return err
+	}
+	go func() {
+		for consumeItem := range consumer {
+			if autoAck == false {
+				consumeItem.Ack(false)
+			}
+			item := queues.Item{
+				Body:      consumeItem.Body,
+				Timestamp: consumeItem.Timestamp,
+			}
+			itemHook(item)
+		}
+	}()
+	return nil
+}
+
+type rabbit struct {
+	Conn   *amqp.Connection
+	Chan   *amqp.Channel
+	Queues queuesInfo
 }
 
 func dialRabbitQueue(address, port, username, password string) (queues.Queue, error) {
@@ -112,6 +140,7 @@ var onlyOnce sync.Once
 
 func (r *rabbit) createQueue(info queueInfo) error {
 	onlyOnce.Do(func() {
+		//initialize the channel
 		r.Chan, _ = r.Conn.Channel()
 	})
 	err := r.Chan.ExchangeDeclare(
