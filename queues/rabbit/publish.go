@@ -2,7 +2,6 @@ package rabbit
 
 import (
 	"encoding/json"
-	"fmt"
 
 	"github.com/streadway/amqp"
 
@@ -18,7 +17,7 @@ func GetPublisher(configPointer *map[string]string) (queues.Publisher, error) {
 			return nil, err
 		}
 	}
-	config := rabbitConfigFromMap(configPointer)
+	config := rabbitPublishConfigFromMap(configPointer)
 	jsonKey, err := json.Marshal(*configPointer)
 	if err != nil {
 		return nil, err
@@ -61,7 +60,6 @@ type publish struct {
 }
 
 func (p *publish) Publish(body []byte) error {
-	fmt.Println(p.config.ExChangeName, p.config.RouteName)
 	return p.channel.Publish(
 		p.config.ExChangeName,
 		p.config.RouteName,
