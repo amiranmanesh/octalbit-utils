@@ -10,14 +10,27 @@ import (
 var connection *amqp.Connection
 var publisher = make(map[string]queues.Publisher)
 
+var lazyInit func() error
+
+func Setup(username, password, port, address string) {
+	if connection != nil {
+		_ = connection.Close()
+		connection = nil
+	}
+	lazyInit = func() error {
+		err := connect(
+			username,
+			password,
+			port,
+			address,
+		)
+		return err
+	}
+}
+
 func GetPublisher(configPointer *map[string]string) (queues.Publisher, error) {
 	if connection == nil {
-		err := connect(
-			"guest",
-			"guest",
-			"localhost",
-			"5672",
-		)
+		err := lazyInit()
 		if err != nil {
 			return nil, err
 		}
@@ -25,26 +38,34 @@ func GetPublisher(configPointer *map[string]string) (queues.Publisher, error) {
 	config := rabbitConfigFromMap(configPointer)
 	key := mapToJsonToString(*configPointer)
 	if publisher[key] == nil {
-		channel, err := connection.Channel()
+		err := setPublisherValue(key, config)
 		if err != nil {
 			return nil, err
 		}
-		publishObject := &publish{channel: channel, config: config}
-		err = publishObject.exchangeDeclare()
-		if err != nil {
-			return nil, err
-		}
-		_, err = publishObject.queueDeclare()
-		if err != nil {
-			return nil, err
-		}
-		err = publishObject.queueBind()
-		if err != nil {
-			return nil, err
-		}
-		publisher[key] = publishObject
 	}
 	return publisher[key], nil
+}
+
+func setPublisherValue(key string, config Config) error {
+	channel, err := connection.Channel()
+	if err != nil {
+		return err
+	}
+	publishObject := &publish{channel: channel, config: config}
+	err = publishObject.exchangeDeclare()
+	if err != nil {
+		return err
+	}
+	_, err = publishObject.queueDeclare()
+	if err != nil {
+		return err
+	}
+	err = publishObject.queueBind()
+	if err != nil {
+		return err
+	}
+	publisher[key] = publishObject
+	return nil
 }
 
 type publish struct {
@@ -115,8 +136,6 @@ func connect(username string, password string, address, port string) error {
 	connection = conn
 	return err
 }
-
-//
 
 func mapToJsonToString(data map[string]string) string {
 	key, _ := json.Marshal(data)
