@@ -3,30 +3,13 @@ package rabbit
 import (
 	"encoding/json"
 	"fmt"
-	"git.aasal.co/octal/octalbit/backend/utils/queues"
+
 	"github.com/streadway/amqp"
+
+	"git.aasal.co/octal/octalbit/backend/utils/queues"
 )
 
-var connection *amqp.Connection
 var publisher = make(map[string]queues.Publisher)
-
-var lazyInit func() error
-
-func Setup(username, password, port, address string) {
-	if connection != nil {
-		_ = connection.Close()
-		connection = nil
-	}
-	lazyInit = func() error {
-		err := connect(
-			username,
-			password,
-			port,
-			address,
-		)
-		return err
-	}
-}
 
 func GetPublisher(configPointer *map[string]string) (queues.Publisher, error) {
 	if connection == nil {
@@ -36,7 +19,11 @@ func GetPublisher(configPointer *map[string]string) (queues.Publisher, error) {
 		}
 	}
 	config := rabbitConfigFromMap(configPointer)
-	key := mapToJsonToString(*configPointer)
+	jsonKey, err := json.Marshal(*configPointer)
+	if err != nil {
+		return nil, err
+	}
+	key := string(jsonKey)
 	if publisher[key] == nil {
 		err := setPublisherValue(key, config)
 		if err != nil {
@@ -46,7 +33,7 @@ func GetPublisher(configPointer *map[string]string) (queues.Publisher, error) {
 	return publisher[key], nil
 }
 
-func setPublisherValue(key string, config Config) error {
+func setPublisherValue(key string, config PublishConfig) error {
 	channel, err := connection.Channel()
 	if err != nil {
 		return err
@@ -70,7 +57,7 @@ func setPublisherValue(key string, config Config) error {
 
 type publish struct {
 	channel *amqp.Channel
-	config  Config
+	config  PublishConfig
 }
 
 func (p *publish) Publish(body []byte) error {
@@ -122,22 +109,4 @@ func (p *publish) queueBind() error {
 		false,
 		nil,
 	)
-}
-
-func connect(username string, password string, address, port string) error {
-	conn, err := amqp.Dial(
-		fmt.Sprintf("amqp://%s:%s@%s:%s",
-			username,
-			password,
-			address,
-			port,
-		),
-	)
-	connection = conn
-	return err
-}
-
-func mapToJsonToString(data map[string]string) string {
-	key, _ := json.Marshal(data)
-	return string(key)
 }
