@@ -10,21 +10,21 @@ import (
 
 var publisher = make(map[string]queues.Publisher)
 
-func GetPublisher(configPointer *map[string]string) (queues.Publisher, error) {
+func GetPublisher(config map[string]string) (queues.Publisher, error) {
 	if connection == nil {
 		err := lazyInit()
 		if err != nil {
 			return nil, err
 		}
 	}
-	config := rabbitPublishConfigFromMap(configPointer)
-	jsonKey, err := json.Marshal(*configPointer)
+	publishConfig := rabbitPublishConfigFromMap(config)
+	jsonKey, err := json.Marshal(config)
 	if err != nil {
 		return nil, err
 	}
 	key := string(jsonKey)
 	if publisher[key] == nil {
-		err := setPublisherValue(key, config)
+		err := setPublisherValue(key, publishConfig)
 		if err != nil {
 			return nil, err
 		}
