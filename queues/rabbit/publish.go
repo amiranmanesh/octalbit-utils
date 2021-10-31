@@ -5,7 +5,7 @@ import (
 
 	"github.com/streadway/amqp"
 
-	"git.aasal.co/octal/octalbit/backend/utils/queues"
+	"github.com/amiranmanesh/octalbit-utils/queues"
 )
 
 var publisher = make(map[string]queues.Publisher)

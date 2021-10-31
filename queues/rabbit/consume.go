@@ -2,7 +2,7 @@ package rabbit
 
 import (
 	"encoding/json"
-	"git.aasal.co/octal/octalbit/backend/utils/queues"
+	"github.com/amiranmanesh/octalbit-utils/queues"
 	"github.com/streadway/amqp"
 )
 

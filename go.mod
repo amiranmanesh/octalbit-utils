@@ -1,4 +1,4 @@
-module git.aasal.co/octal/octalbit/backend/utils
+module github.com/amiranmanesh/octalbit-utils
 
 go 1.17
 
