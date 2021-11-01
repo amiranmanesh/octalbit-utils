@@ -10,6 +10,6 @@ type Publisher interface {
 }
 
 type Consumer interface {
-	Consume(queueName string, itemHook func(Item) error) error
-	Dispose(queueName string) error
+	Consume(itemHook func(Item) error) error
+	Dispose() error
 }

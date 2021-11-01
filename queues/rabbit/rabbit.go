@@ -8,7 +8,7 @@ import (
 var connection *amqp.Connection
 var lazyInit func() error
 
-func Setup(username, password, port, address string) {
+func Setup(username, password, address string, port int) {
 	if connection != nil {
 		_ = connection.Close()
 		connection = nil
@@ -17,16 +17,16 @@ func Setup(username, password, port, address string) {
 		err := connect(
 			username,
 			password,
-			port,
 			address,
+			port,
 		)
 		return err
 	}
 }
 
-func connect(username string, password string, address, port string) error {
+func connect(username, password, address string, port int) error {
 	conn, err := amqp.Dial(
-		fmt.Sprintf("amqp://%s:%s@%s:%s",
+		fmt.Sprintf("amqp://%s:%s@%s:%d",
 			username,
 			password,
 			address,

@@ -8,21 +8,21 @@ import (
 
 var consumer = make(map[string]queues.Consumer)
 
-func GetConsumer(configPointer *map[string]string) (queues.Consumer, error) {
+func GetConsumer(config map[string]string) (queues.Consumer, error) {
 	if connection == nil {
 		err := lazyInit()
 		if err != nil {
 			return nil, err
 		}
 	}
-	config := rabbitConsumeConfigFromMap(configPointer)
-	jsonKey, err := json.Marshal(*configPointer)
+	consumerConfig := rabbitConsumeConfigFromMap(config)
+	jsonKey, err := json.Marshal(config)
 	if err != nil {
 		return nil, err
 	}
 	key := string(jsonKey)
 	if consumer[key] == nil {
-		err := setConsumerValue(key, config)
+		err := setConsumerValue(key, consumerConfig)
 		if err != nil {
 			return nil, err
 		}
@@ -45,9 +45,9 @@ type consume struct {
 	config  ConsumeConfig
 }
 
-func (c *consume) Consume(queueName string, itemHook func(queues.Item) error) error {
+func (c *consume) Consume(itemHook func(queues.Item) error) error {
 	consumer, err := c.channel.Consume(
-		queueName,
+		c.config.QueueName,
 		"",
 		false,
 		false,
@@ -66,7 +66,7 @@ func (c *consume) Consume(queueName string, itemHook func(queues.Item) error) er
 				},
 			)
 			if err != nil {
-				_ = c.Dispose(queueName)
+				_ = c.Dispose()
 				return
 			}
 			_ = consumeItem.Ack(false)
@@ -75,6 +75,6 @@ func (c *consume) Consume(queueName string, itemHook func(queues.Item) error) er
 	return nil
 }
 
-func (c *consume) Dispose(queueName string) error {
+func (c *consume) Dispose() error {
 	return c.channel.Close()
 }

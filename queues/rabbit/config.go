@@ -19,18 +19,17 @@ type ConsumeConfig struct {
 	QueueName string
 }
 
-func (configPointer *PublishConfig) ToMap() map[string]string {
+func (config PublishConfig) ToMap() map[string]string {
 	return map[string]string{
-		"queueName":    configPointer.QueueName,
-		"exChangeName": configPointer.ExChangeName,
-		"bindingName":  configPointer.BindingName,
-		"routeName":    configPointer.RouteName,
-		"exchangeKind": configPointer.ExChangeKind,
+		"queueName":    config.QueueName,
+		"exChangeName": config.ExChangeName,
+		"bindingName":  config.BindingName,
+		"routeName":    config.RouteName,
+		"exchangeKind": config.ExChangeKind,
 	}
 }
 
-func rabbitPublishConfigFromMap(rabbitMapPointer *map[string]string) PublishConfig {
-	var rabbitMap = *rabbitMapPointer
+func rabbitPublishConfigFromMap(rabbitMap map[string]string) PublishConfig {
 	return PublishConfig{
 		QueueName:    rabbitMap["queueName"],
 		ExChangeName: rabbitMap["exChangeName"],
@@ -40,14 +39,13 @@ func rabbitPublishConfigFromMap(rabbitMapPointer *map[string]string) PublishConf
 	}
 }
 
-func (configPointer *ConsumeConfig) ToMap() map[string]string {
+func (config ConsumeConfig) ToMap() map[string]string {
 	return map[string]string{
-		"queueName": configPointer.QueueName,
+		"queueName": config.QueueName,
 	}
 }
 
-func rabbitConsumeConfigFromMap(rabbitMapPointer *map[string]string) ConsumeConfig {
-	var rabbitMap = *rabbitMapPointer
+func rabbitConsumeConfigFromMap(rabbitMap map[string]string) ConsumeConfig {
 	return ConsumeConfig{
 		QueueName: rabbitMap["queueName"],
 	}
