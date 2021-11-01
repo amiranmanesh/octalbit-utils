@@ -13,3 +13,5 @@ type Consumer interface {
 	Consume(itemHook func(Item) error) error
 	Dispose() error
 }
+
+
