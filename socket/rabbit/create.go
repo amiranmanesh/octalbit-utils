@@ -3,29 +3,28 @@ package rabbit
 import "github.com/streadway/amqp"
 
 func createQueue(channel *amqp.Channel, config QueueConfig) error {
-
-	queueObject := &queue{channel: channel, config: config}
-	err := queueObject.exchangeDeclare()
+	newQueueObject := &newQueue{channel: channel, config: config}
+	err := newQueueObject.exchangeDeclare()
 	if err != nil {
 		return err
 	}
-	_, err = queueObject.queueDeclare()
+	_, err = newQueueObject.queueDeclare()
 	if err != nil {
 		return err
 	}
-	err = queueObject.queueBind()
+	err = newQueueObject.queueBind()
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-type queue struct {
+type newQueue struct {
 	channel *amqp.Channel
 	config  QueueConfig
 }
 
-func (q *queue) exchangeDeclare() error {
+func (q *newQueue) exchangeDeclare() error {
 	return q.channel.ExchangeDeclare(
 		q.config.ExChangeName,
 		q.config.ExChangeKind,
@@ -37,7 +36,7 @@ func (q *queue) exchangeDeclare() error {
 	)
 }
 
-func (q *queue) queueDeclare() (amqp.Queue, error) {
+func (q *newQueue) queueDeclare() (amqp.Queue, error) {
 	return q.channel.QueueDeclare(
 		q.config.QueueName,
 		true,
@@ -48,7 +47,7 @@ func (q *queue) queueDeclare() (amqp.Queue, error) {
 	)
 }
 
-func (q *queue) queueBind() error {
+func (q *newQueue) queueBind() error {
 	return q.channel.QueueBind(
 		q.config.QueueName,
 		q.config.BindingName,
