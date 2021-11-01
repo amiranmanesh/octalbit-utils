@@ -17,7 +17,7 @@ func GetPublisher(config map[string]string) (queues.Publisher, error) {
 			return nil, err
 		}
 	}
-	publishConfig := rabbitPublishConfigFromMap(config)
+	publishConfig := rabbitQueueConfigFromMap(config)
 	jsonKey, err := json.Marshal(config)
 	if err != nil {
 		return nil, err
@@ -32,31 +32,23 @@ func GetPublisher(config map[string]string) (queues.Publisher, error) {
 	return publisher[key], nil
 }
 
-func setPublisherValue(key string, config PublishConfig) error {
+func setPublisherValue(key string, config QueueConfig) error {
 	channel, err := connection.Channel()
 	if err != nil {
 		return err
 	}
-	publishObject := &publish{channel: channel, config: config}
-	err = publishObject.exchangeDeclare()
+
+	err = createQueue(channel, config)
 	if err != nil {
 		return err
 	}
-	_, err = publishObject.queueDeclare()
-	if err != nil {
-		return err
-	}
-	err = publishObject.queueBind()
-	if err != nil {
-		return err
-	}
-	publisher[key] = publishObject
+	publisher[key] = &publish{channel: channel, config: config}
 	return nil
 }
 
 type publish struct {
 	channel *amqp.Channel
-	config  PublishConfig
+	config  QueueConfig
 }
 
 func (p *publish) Publish(body []byte) error {
@@ -74,37 +66,4 @@ func (p *publish) Publish(body []byte) error {
 
 func (p *publish) Dispose() error {
 	return p.channel.Close()
-}
-
-func (p *publish) exchangeDeclare() error {
-	return p.channel.ExchangeDeclare(
-		p.config.ExChangeName,
-		p.config.ExChangeKind,
-		true,
-		false,
-		false,
-		false,
-		nil,
-	)
-}
-
-func (p *publish) queueDeclare() (amqp.Queue, error) {
-	return p.channel.QueueDeclare(
-		p.config.QueueName,
-		true,
-		false,
-		false,
-		false,
-		nil,
-	)
-}
-
-func (p *publish) queueBind() error {
-	return p.channel.QueueBind(
-		p.config.QueueName,
-		p.config.BindingName,
-		p.config.ExChangeName,
-		false,
-		nil,
-	)
 }

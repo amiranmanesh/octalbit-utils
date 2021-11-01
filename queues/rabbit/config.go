@@ -7,7 +7,7 @@ const (
 	HeaderExchange = "header"
 )
 
-type PublishConfig struct {
+type QueueConfig struct {
 	QueueName    string
 	ExChangeName string
 	BindingName  string
@@ -15,11 +15,7 @@ type PublishConfig struct {
 	ExChangeKind string
 }
 
-type ConsumeConfig struct {
-	QueueName string
-}
-
-func (config PublishConfig) ToMap() map[string]string {
+func (config QueueConfig) ToMap() map[string]string {
 	return map[string]string{
 		"queueName":    config.QueueName,
 		"exChangeName": config.ExChangeName,
@@ -29,24 +25,12 @@ func (config PublishConfig) ToMap() map[string]string {
 	}
 }
 
-func rabbitPublishConfigFromMap(rabbitMap map[string]string) PublishConfig {
-	return PublishConfig{
+func rabbitQueueConfigFromMap(rabbitMap map[string]string) QueueConfig {
+	return QueueConfig{
 		QueueName:    rabbitMap["queueName"],
 		ExChangeName: rabbitMap["exChangeName"],
 		BindingName:  rabbitMap["bindingName"],
 		RouteName:    rabbitMap["routeName"],
 		ExChangeKind: rabbitMap["exchangeKind"],
-	}
-}
-
-func (config ConsumeConfig) ToMap() map[string]string {
-	return map[string]string{
-		"queueName": config.QueueName,
-	}
-}
-
-func rabbitConsumeConfigFromMap(rabbitMap map[string]string) ConsumeConfig {
-	return ConsumeConfig{
-		QueueName: rabbitMap["queueName"],
 	}
 }

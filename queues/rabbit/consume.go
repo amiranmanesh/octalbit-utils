@@ -15,7 +15,7 @@ func GetConsumer(config map[string]string) (queues.Consumer, error) {
 			return nil, err
 		}
 	}
-	consumerConfig := rabbitConsumeConfigFromMap(config)
+	consumerConfig := rabbitQueueConfigFromMap(config)
 	jsonKey, err := json.Marshal(config)
 	if err != nil {
 		return nil, err
@@ -31,8 +31,12 @@ func GetConsumer(config map[string]string) (queues.Consumer, error) {
 
 }
 
-func setConsumerValue(key string, config ConsumeConfig) error {
+func setConsumerValue(key string, config QueueConfig) error {
 	channel, err := connection.Channel()
+	if err != nil {
+		return err
+	}
+	err = createQueue(channel, config)
 	if err != nil {
 		return err
 	}
@@ -42,7 +46,7 @@ func setConsumerValue(key string, config ConsumeConfig) error {
 
 type consume struct {
 	channel *amqp.Channel
-	config  ConsumeConfig
+	config  QueueConfig
 }
 
 func (c *consume) Consume(itemHook func(queues.Item) error) error {
