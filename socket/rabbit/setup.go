@@ -24,6 +24,17 @@ func Setup(username, password, address string, port int) {
 	}
 }
 
+func ConnectionClose() error {
+	if connection == nil {
+		return fmt.Errorf("connection is nil")
+	}
+	err := connection.Close()
+	if err == nil {
+		connection = nil
+	}
+	return err
+}
+
 func connect(username, password, address string, port int) error {
 	conn, err := amqp.Dial(
 		fmt.Sprintf("amqp://%s:%s@%s:%d",
