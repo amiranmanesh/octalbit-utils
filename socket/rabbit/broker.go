@@ -80,20 +80,17 @@ func (q *queue) Consume(itemHook func(socket.MessageBrokerItem) error) error {
 	if err != nil {
 		return err
 	}
-	go func() {
-		for consumeItem := range consumer {
-			err := itemHook(
-				socket.MessageBrokerItem{
-					Body: consumeItem.Body,
-				},
-			)
-			if err != nil {
-				_ = q.Dispose()
-				return
-			}
-			_ = consumeItem.Ack(false)
+	for consumeItem := range consumer {
+		err := itemHook(
+			socket.MessageBrokerItem{
+				Body: consumeItem.Body,
+			},
+		)
+		if err != nil {
+			return err
 		}
-	}()
+		_ = consumeItem.Ack(false)
+	}
 	return nil
 }
 
